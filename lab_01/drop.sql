@@ -1,6 +1,5 @@
-drop table postgres.public.hour cascade;
-drop table postgres.public.customer cascade;
-drop table postgres.public.room cascade;
-drop table postgres.public.rehearsal cascade;
-drop table postgres.public.hours_in_rehearsal cascade;
-drop table postgres.public.rehearsals_in_room cascade;
+drop table if exists postgres.public.hour cascade;
+drop table if exists postgres.public.customer cascade;
+drop table if exists postgres.public.room cascade;
+drop table if exists postgres.public.rehearsal cascade;
+drop table if exists postgres.public.rehearsals_in_room cascade;

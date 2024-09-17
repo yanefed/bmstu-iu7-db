@@ -1,4 +1,5 @@
 import datetime
+import typing
 from dataclasses import dataclass
 
 
@@ -24,9 +25,9 @@ class Room:
 class Hour:
     hour_id: int
     room_id: int
+    rehearsal_id: typing.Optional[int]
     date: datetime.date
     hour: int
-    available: bool
 
 
 @dataclass
@@ -36,7 +37,7 @@ class Rehearsal:
     date: datetime.date
     customer_rate: int
     room_rate: int
-    status: int
+    additional_info: str
 
 
 @dataclass
@@ -51,4 +52,4 @@ class RehearsalRoom:
     id: int
     rehearsal_id: int
     room_id: int
-    paid: bool
+    status: int
