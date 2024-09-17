@@ -1,9 +1,7 @@
 import concurrent.futures
 import itertools
 import sys
-import random
-import datetime
-from dateutil.utils import today
+
 from models import *
 from utils import *
 
@@ -18,7 +16,13 @@ today_date = datetime.datetime.today()
 
 def generate_customer():
     return [
-        Customer(i, generate_name(), generate_phone_number(), generate_email(), False)
+        Customer(
+            i,
+            generate_name(),
+            generate_phone_number(),
+            generate_email(),
+            random.random() < 0.1,
+        )
         for i in range(customers_limit)
     ]
 
@@ -70,9 +74,17 @@ def generate_rehearsals_for_room(room, customers, hours, start_date, end_date):
 
     while start_date < end_date:
         occupied_hours = set()
+        customers_rehearsed_today = set()
         for _ in range(len(customers)):
-            if random.random() < 0.5:  # 50% chance to create a rehearsal
-                customer = random.choice(customers)
+            if random.random() < 0.8:
+                customer = random.sample(customers, 1)[0]
+                if (
+                    customer.customer_id,
+                    room.room_id,
+                    start_date,
+                ) in customers_rehearsed_today:
+                    continue
+
                 additional_info = " ".join(
                     random.choices(["info1", "info2", "info3", "info4"], k=3)
                 )
@@ -116,6 +128,9 @@ def generate_rehearsals_for_room(room, customers, hours, start_date, end_date):
                                 room.room_id,
                                 status,
                             )
+                        )
+                        customers_rehearsed_today.add(
+                            (customer.customer_id, room.room_id, start_date)
                         )
 
                     day_hours = [
