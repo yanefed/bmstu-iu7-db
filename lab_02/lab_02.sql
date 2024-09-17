@@ -227,9 +227,95 @@ ORDER BY cte.avg_rate DESC;
 
 
 -- 23. Инструкция SELECT, использующая рекурсивное обобщенное табличное выражение.
+-- Создание таблицы.
+CREATE TABLE Staff
+(
+    EmployeeID serial primary key,
+    FirstName  text,
+    LastName   text,
+    Title      text,
+    ManagerID  int
+);
 
+INSERT INTO Staff
+VALUES (1, N'Иван', N'Петров', N'Главный исполнительный директор', NULL),
+       (2, N'Алексей', N'Сидоров', N'Исполнительный директор', 1),
+       (3, N'Андрей', N'Иванов', N'Менеджер', 2),
+       (4, N'Сергей', N'Смирнов', N'Менеджер', 2),
+       (5, N'Александр', N'Кузнецов', N'Менеджер', 2),
+       (6, N'Антон', N'Попов', N'Менеджер', 2),
+       (7, N'Дмитрий', N'Васильев', N'Администратор', 3),
+       (8, N'Алексей', N'Петров', N'Администратор', 3),
+       (9, N'Андрей', N'Сидоров', N'Администратор', 4),
+       (10, N'Сергей', N'Иванов', N'Администратор', 4),
+       (11, N'Александр', N'Смирнов', N'Администратор', 5),
+       (12, N'Антон', N'Кузнецов', N'Администратор', 5),
+       (13, N'Дмитрий', N'Попов', N'Администратор', 6),
+       (14, N'Алексей', N'Васильев', N'Администратор', 6),
+       (15, N'Андрей', N'Петров', N'Администратор', 3),
+       (16, N'Сергей', N'Сидоров', N'Администратор', 4)
+;
+
+-- Рекурсивное обобщенное табличное выражение для вычисления иерархии сотрудников
+WITH RECURSIVE StaffHierarchy AS (
+    -- Начальное значение рекурсии
+    SELECT EmployeeID, FirstName, LastName, Title, ManagerID, 1 AS Level
+    FROM Staff
+    WHERE ManagerID IS NULL
+
+    UNION ALL
+
+    SELECT s.EmployeeID, s.FirstName, s.LastName, s.Title, s.ManagerID, sh.Level + 1
+    FROM Staff s
+             JOIN StaffHierarchy sh ON s.ManagerID = sh.EmployeeID)
+SELECT EmployeeID, FirstName, LastName, Title, ManagerID, Level
+FROM StaffHierarchy
+ORDER BY Level, ManagerID, EmployeeID;
+
+DROP TABLE IF EXISTS Staff;
 
 -- 24. Оконные функции. Использование конструкций MIN/MAX/AVG OVER()
+SELECT re.date,
+       re.room_rate,
+       MIN(re.room_rate) OVER (PARTITION BY re.date) as min_room_rate,
+       MAX(re.room_rate) OVER (PARTITION BY re.date) as max_room_rate,
+       AVG(re.room_rate) OVER (PARTITION BY re.date) as avg_room_rate
+FROM postgres.public.rehearsal re
+ORDER BY re.date, re.room_rate;
 
 
--- 25. Оконные фнкции для устранения дублей
+-- 25. Оконные функции для устранения дублей.
+-- Придумать запрос, в результате которого в данных появляются полные дубли.
+-- Устранить дублирующиеся строки с использованием функции ROW_NUMBER().
+
+CREATE TABLE IF NOT EXISTS customer_dupl
+(
+    customer_id  serial primary key,
+    name         text,
+    phone_number text,
+    email        text,
+    ban          boolean
+);
+
+INSERT INTO customer_dupl (name, phone_number, email, ban)
+SELECT name, phone_number, email, ban
+FROM public.customer;
+
+SELECT name, phone_number, email, ban, row_number() over (partition by name, phone_number, email, ban) as rn
+FROM customer_dupl
+ORDER BY name, phone_number, email, ban;
+
+SELECT name, phone_number, email, ban
+FROM (SELECT name, phone_number, email, ban, row_number() over (partition by name, phone_number, email, ban) as rn
+      FROM customer_dupl) as t
+WHERE rn = 1;
+
+DELETE
+FROM customer_dupl
+WHERE customer_id NOT IN (SELECT customer_id
+                          FROM (SELECT customer_id,
+                                       row_number() over (partition by name, phone_number, email, ban) as rn
+                                FROM customer_dupl) as t
+                          WHERE rn = 1);
+
+DROP TABLE IF EXISTS customer_dupl;
