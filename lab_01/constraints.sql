@@ -38,7 +38,9 @@ alter table postgres.public.rehearsal
     add constraint valid_info check ( additional_info != '' ),
 
     alter column date set not null,
-    alter column additional_info set not null;
+    alter column additional_info set not null,
+    alter column customer_rate set not null,
+    alter column room_rate set not null;
 
 alter table postgres.public.hour
     add constraint pk_hour_id primary key (hour_id),
