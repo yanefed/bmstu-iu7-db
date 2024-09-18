@@ -32,7 +32,7 @@ ORDER BY date;
 -- 5. Инструкция SELECT, использующая предикат EXISTS с вложенным подзапросом.
 SELECT *
 FROM postgres.public.room ro
-WHERE EXISTS (SELECT *
+WHERE EXISTS (SELECT re.rehearsal_id
               FROM public.rehearsals_in_room rir
                        JOIN public.rehearsal re ON rir.rehearsal_id = re.rehearsal_id
               WHERE rir.room_id = ro.room_id
@@ -43,7 +43,7 @@ ORDER BY ro.name;
 -- 6. Инструкция SELECT, использующая предикат сравнения с квантором.
 SELECT *
 FROM postgres.public.rehearsal re
-WHERE room_rate >= ALL (SELECT room_rate
+WHERE room_rate <= ALL (SELECT room_rate
                         FROM postgres.public.rehearsal
                         WHERE date = '2024-09-01')
 ORDER BY room_rate DESC;
