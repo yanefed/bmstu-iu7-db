@@ -61,6 +61,24 @@ FROM Table1 t1
                   AND GREATEST(t1.valid_from_dttm, t2.valid_from_dttm) < LEAST(t1.valid_to_dttm, t2.valid_to_dttm)
 ORDER BY t1.id, valid_from_dttm;
 
+-- alt way w/o greatest and least
+SELECT t1.id,
+       t1.var1,
+       t2.var2,
+       CASE
+           WHEN t1.valid_from_dttm > t2.valid_from_dttm THEN t1.valid_from_dttm
+           ELSE t2.valid_from_dttm
+       END AS valid_from_dttm,
+       CASE
+           WHEN t1.valid_to_dttm < t2.valid_to_dttm THEN t1.valid_to_dttm
+           ELSE t2.valid_to_dttm
+       END AS valid_to_dttm
+FROM Table1 t1
+JOIN Table2 t2
+ON t1.id = t2.id
+AND (t1.valid_from_dttm <= t2.valid_to_dttm AND t2.valid_from_dttm <= t1.valid_to_dttm)
+ORDER BY t1.id, valid_from_dttm;
 
+-- drop
 DROP TABLE Table1;
 DROP TABLE Table2;
