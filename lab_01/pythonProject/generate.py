@@ -11,7 +11,7 @@ customers_limit = 1000
 rooms_limit = 50
 current_year = datetime.datetime.now().year
 start_date = datetime.datetime(current_year, 8, 1)
-today_date = datetime.datetime.today()
+today_date = datetime.datetime.today() + datetime.timedelta(days=7)
 
 
 def generate_customer():
@@ -79,16 +79,19 @@ def generate_rehearsals_for_room(room, customers, hours, start_date, end_date):
             if random.random() < 0.8:
                 customer = random.sample(customers, 1)[0]
                 if (
-                    customer.customer_id,
-                    room.room_id,
-                    start_date,
+                        customer.customer_id,
+                        room.room_id,
+                        start_date,
                 ) in customers_rehearsed_today:
                     continue
 
                 additional_info = " ".join(
-                    random.choices(["info1", "info2", "info3", "info4"], k=3)
+                    random.choices(["info1", "info2", "info3", "info4"])
                 )
-                status = random.choice([1, 2, 3])
+                if start_date < today_date:
+                    status = 1
+                else:
+                    status = random.choice([1, 2, 3])
                 day_hours = list(range(9, 24))
 
                 while day_hours:
@@ -98,7 +101,7 @@ def generate_rehearsals_for_room(room, customers, hours, start_date, end_date):
                     rehearsal_hours_range = list(range(start_hour, end_hour))
 
                     if not any(
-                        hour in occupied_hours for hour in rehearsal_hours_range
+                            hour in occupied_hours for hour in rehearsal_hours_range
                     ):
                         rehearsal_id = next(rehearsal_id_counter)
                         rehearsals.append(
@@ -106,8 +109,8 @@ def generate_rehearsals_for_room(room, customers, hours, start_date, end_date):
                                 rehearsal_id,
                                 customer.customer_id,
                                 start_date,
-                                generate_rating(),
-                                generate_rating(),
+                                generate_rating() if start_date < today_date else None,
+                                generate_rating() if start_date < today_date else None,
                                 additional_info,
                             )
                         )
