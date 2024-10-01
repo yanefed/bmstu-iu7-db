@@ -38,9 +38,7 @@ alter table postgres.public.rehearsal
     add constraint valid_info check ( additional_info != '' ),
 
     alter column date set not null,
-    alter column additional_info set not null,
-    alter column customer_rate set not null,
-    alter column room_rate set not null;
+    alter column additional_info set not null;
 
 alter table postgres.public.hour
     add constraint pk_hour_id primary key (hour_id),
@@ -56,6 +54,6 @@ alter table postgres.public.rehearsals_in_room
     add constraint pk_rir primary key (id),
     add constraint fk_rehearsal_id foreign key (rehearsal_id) references postgres.public.rehearsal,
     add constraint fk_room_id foreign key (room_id) references postgres.public.room,
-    add constraint valid_status check ( 0 < status and status <= 3 ),
+    add constraint valid_status check (-1 <= status and status <= 3 ),
 
     alter column status set not null;
