@@ -34,6 +34,10 @@ $$
 
 select public.get_first_hour_of_rehearsal(1);
 select public.get_last_hour_of_rehearsal(1);
+select hour.rehearsal_id, hour.hour
+from hour
+where hour.rehearsal_id = 1
+group by hour.rehearsal_id, hour.hour;
 
 
 -- 2. Получить данные о репетициях, проходящих сегодня в данной комнате
@@ -125,7 +129,7 @@ $$
     language plpgsql;
 
 select *
-from fib(1, 1, 100);
+from fib(1, 1, 14);
 
 -- 5. Удалить неиспользованные часы
 
@@ -366,3 +370,30 @@ where date = '2024-10-04'
   and room = 'DarkViolet'
   and beginning = 12
   and ending = 15;
+
+
+-- Защита
+-- функция получает название группы и возвращает комнату, в которой она чаще всего бывает
+
+create or replace function get_room_of_group(group_name text)
+    returns text as
+$$
+declare
+    room_name text;
+begin
+    select rm.name
+    into room_name
+    from public.rehearsal as re
+             join public.rehearsals_in_room as rir on rir.rehearsal_id = re.rehearsal_id
+             join public.room as rm on rir.room_id = rm.room_id
+             join public.customer as cu on cu.customer_id = re.customer_id
+    where cu.name = group_name
+    group by rm.name
+    order by count(rm.name) desc
+    limit 1;
+    return room_name;
+end;
+$$
+    language plpgsql;
+
+select public.get_room_of_group('test');
