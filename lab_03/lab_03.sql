@@ -224,7 +224,7 @@ $$
 
 call get_meta('hour');
 
--- 9. Триггер AFTER. Освобождение часов отмененной репетиции, если отмена за
+-- 9. Триггер AFTER. Освобождение часов отмененной репетиции, если отмена за день до
 create or replace function cancel_rehearsal_free_hour()
     returns trigger as
 $$
