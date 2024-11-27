@@ -21,7 +21,6 @@ import datetime
 import os
 
 import psycopg2
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 # Подключение к базе данных
 conn = psycopg2.connect(
@@ -30,7 +29,6 @@ conn = psycopg2.connect(
     password=os.getenv("POSTGRES_PASSWORD"),
     host="localhost",
 )
-conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
 cursor = conn.cursor()
 
 
@@ -110,6 +108,20 @@ def metadata_query():
     print("table_name")
     for row in result:
         print(f"{row[0]}")
+        cursor.execute(
+            """
+        SELECT column_name, data_type
+        FROM information_schema.columns
+        WHERE table_name = 'rehearsal'
+        ORDER BY ordinal_position;
+        """
+        )
+        columns_types = cursor.fetchall()
+        print(f"Типы данных столбцов таблицы {row[0]}:")
+        print(f"{('column_name').ljust(15)}\t|\tdata_type")
+        for row in columns_types:
+            print(f"{str(row[0]).ljust(15)}\t|\t{row[1]}")
+        print()
     print()
 
 
@@ -161,6 +173,21 @@ def create_table():
 
 
 def insert_data():
+    # проверка существования таблицы
+    cursor.execute(
+        """
+    SELECT EXISTS (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+        AND table_name = 'places'
+    );
+    """
+    )
+    result = cursor.fetchone()
+    if not result[0]:
+        print("Таблица не существует")
+        return
     cursor.execute(
         """
     INSERT INTO public.places (name, address, employees)

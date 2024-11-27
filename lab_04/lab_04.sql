@@ -107,24 +107,23 @@ create or replace function py_cancel_rehearsal_free_hour()
     language plpython3u
 as
 $$
-    def cancel_rehearsal_free_hour():
+    query = plpy.prepare(
+        "select rehearsal.date from public.rehearsal " +
+        "join public.rehearsals_in_room rir on rir.rehearsal_id = rehearsal.rehearsal_id " +
+        "where rehearsal.rehearsal_id = $1", ["int"]
+    )
+    res = plpy.execute(query, [TD["new"]["rehearsal_id"]])
+    rehearsal_date = res[0]["date"] if res else None
+
+    if TD["new"]["status"] == -1 and rehearsal_date > plpy.execute("select current_date")[0]["current_date"]:
+        plpy.notice("Отмена репетиции %s" % TD["new"]["rehearsal_id"])
         query = plpy.prepare(
-            "select rehearsal.date from public.rehearsal " +
-            "join public.rehearsals_in_room rir on rir.rehearsal_id = rehearsal.rehearsal_id " +
-            "where rehearsal.rehearsal_id = $1", ["int"]
+            "update public.hour set rehearsal_id = NULL " +
+            "where room_id = $1 and rehearsal_id = $2 and date > current_date", ["int", "int"]
         )
-        res = plpy.execute(query, [TD["new"]["rehearsal_id"]])
-        rehearsal_date = res[0]["date"] if res else None
+        plpy.execute(query, [TD["new"]["room_id"], TD["new"]["rehearsal_id"]])
 
-        if TD["new"]["status"] == -1 and rehearsal_date > plpy.execute("select current_date")[0]["current_date"]:
-            plpy.notice("Отмена репетиции %s" % TD["new"]["rehearsal_id"])
-            query = plpy.prepare(
-                "update public.hour set rehearsal_id = NULL " +
-                "where room_id = $1 and rehearsal_id = $2 and date > current_date", ["int", "int"]
-            )
-            plpy.execute(query, [TD["new"]["room_id"], TD["new"]["rehearsal_id"]])
 
-    return cancel_rehearsal_free_hour()
 $$;;
 
 create or replace trigger py_cancel_rehearsal_free_hour
@@ -134,31 +133,31 @@ create or replace trigger py_cancel_rehearsal_free_hour
 execute procedure py_cancel_rehearsal_free_hour();
 
 insert into public.rehearsal (date, customer_id, additional_info)
-values ('2024-10-15', 1, 'test_after_trigger');
+values ('2024-10-16', 1, 'test_after_trigger');
 
 select max(rehearsal_id)
 from public.rehearsal;
 
 insert into public.hour (date, hour, room_id, rehearsal_id)
-values ('2024-10-15', 12, 1, 25250),
-       ('2024-10-15', 13, 1, 25250),
-       ('2024-10-15', 14, 1, 25250);
+values ('2024-10-16', 12, 1, 25252),
+       ('2024-10-16', 13, 1, 25252),
+       ('2024-10-16', 14, 1, 25252);
 insert into public.rehearsals_in_room (rehearsal_id, room_id, status)
-values (25250, 1, 1);
+values (25252, 1, 1);
 
 update public.rehearsals_in_room as rir
 set status = -1
-where rir.rehearsal_id = 25250;
+where rir.rehearsal_id = 25252;
 
 select *
 from public.hour
-where hour.date = '2024-10-15'
+where hour.date = '2024-10-16'
   and hour.room_id = 1
   and hour.hour in (12, 13, 14);
 
 delete
 from public.hour
-where hour.date = '2024-10-15'
+where hour.date = '2024-10-16'
   and hour.room_id = 1
   and hour.hour in (12, 13, 14);
 
@@ -180,7 +179,7 @@ create or replace function public.get_rehearsal_info(rehearsal_id int)
 as
 $$
     query = plpy.prepare(
-        "select re.rehearsal_id, re.date, rm.name as room_name, cu.name as customer_name, re.additional_info, rir.status from public.rehearsal as re " +
+        "select re.rehearsal_id, re.date, rm.name as room_name, cu.name as customer_name, re.additional_info, rir.status from public.rehearsal as status " +
         "join public.rehearsals_in_room as rir on re.rehearsal_id = rir.rehearsal_id " +
         "join public.room as rm on rir.room_id = rm.room_id " +
         "join public.customer as cu on re.customer_id = cu.customer_id " +

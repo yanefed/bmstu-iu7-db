@@ -41,8 +41,6 @@ create table if not exists import_table
     doc json
 );
 
-drop table room_copy;
-drop table import_table;
 
 copy import_table from '/tmp/room.json';
 
@@ -55,6 +53,8 @@ from import_table;
 
 select *
 from room_copy;
+
+drop table import_table;
 
 
 --3. Создать таблицу, в которой будет атрибут(-ы) с типом JSON, или добавить атрибут с JSON к уже существующей таблице.
@@ -81,55 +81,49 @@ values (1, '{
       "position": "Position2"
     }
   ]
-}');
-
-insert into lab5_task3_table(id, info)
-values (2, '{
-  "name": "Name2",
-  "address": "Address2",
-  "employees": [
-    {
-      "name": "Employee3",
-      "position": "Position1"
-    },
-    {
-      "name": "Employee4",
-      "position": "Position2"
-    }
-  ]
-}');
-
-insert into lab5_task3_table(id, info)
-values (3, '{
-  "name": "Name3",
-  "address": "Address3",
-  "employees": [
-    {
-      "name": "Employee5",
-      "position": "Position1"
-    },
-    {
-      "name": "Employee6",
-      "position": "Position2"
-    }
-  ]
-}');
-
-insert into lab5_task3_table(id, info)
-values (4, '{
-  "name": "Name4",
-  "address": "Address4",
-  "employees": [
-    {
-      "name": "Employee7",
-      "position": "Position1"
-    },
-    {
-      "name": "Employee8",
-      "position": "Position2"
-    }
-  ]
-}');
+}'),
+       (2, '{
+         "name": "Name2",
+         "address": "Address2",
+         "employees": [
+           {
+             "name": "Employee3",
+             "position": "Position1"
+           },
+           {
+             "name": "Employee4",
+             "position": "Position2"
+           }
+         ]
+       }'),
+       (3, '{
+         "name": "Name3",
+         "address": "Address3",
+         "employees": [
+           {
+             "name": "Employee5",
+             "position": "Position1"
+           },
+           {
+             "name": "Employee6",
+             "position": "Position2"
+           }
+         ]
+       }'),
+       (4, '{
+         "name": "Name4",
+         "address": "Address4",
+         "employees": [
+           {
+             "name": "Employee7",
+             "position": "Position1"
+           },
+           {
+             "name": "Employee8",
+             "position": "Position2"
+           }
+         ]
+       }');
 
 
 select *
@@ -145,7 +139,7 @@ select info -> 'name' as name
 from lab5_task3_table
 where id = 1;
 
---4.3. Выполнить проверку существования узла или атрибута jsonb
+--4.3. Выполнить проверку существования узла или атрибута
 select info -> 'employees' -> 0 as employee
 from lab5_task3_table
 where id = 1
@@ -163,7 +157,7 @@ WHERE info ->> 'name' = 'Name1';
 select *
 from lab5_task3_table;
 
---4.5. Разделить XML/JSON документ на несколько строк по узлам
+--4.5. Разделить JSON документ на несколько строк по узлам
 select id,
        json_extract_path(info, 'name')    as name,
        json_extract_path(info, 'address') as address
