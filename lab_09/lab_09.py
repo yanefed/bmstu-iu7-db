@@ -85,7 +85,6 @@ class PerformanceAnalyzer:
             """)
 
         elif operation == "delete":
-            # Delete from rehearsals_in_room first
             cursor.execute("""
                 DELETE FROM rehearsals_in_room
                 WHERE rehearsal_id IN (
